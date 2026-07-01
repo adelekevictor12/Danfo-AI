@@ -1,6 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useRef, useEffect, useMemo } from "react";
+import { FlipWords } from "./flipword";
 import ThemeToggle from "../components/ThemeToggle";
 import TransitBackground from "../components/TransitBackground";
 import AuthGate from "../components/AuthGate";
@@ -13,6 +15,9 @@ import { useTextToSpeech } from "../lib/useTextToSpeech";
 import { useAuth } from "../lib/useAuth";
 import { useNotifications } from "../lib/useNotifications";
 import { useChatHistory, type Msg } from "../lib/useChatHistory";
+
+// Rotating greeting across Nigeria's major languages (animated via FlipWords).
+const GREETINGS = ["E kaabo.", "Nnọọ.", "Barka.", "Welcome."];
 
 const SAMPLES = [
   "Mo fẹ lọ si Oshodi lati CMS",
@@ -177,8 +182,14 @@ export default function Home() {
           </button>
 
           <div className="brandtext">
-            <h1>DanfoAI</h1>
-            <p>Lagos routes in your language.</p>
+            <Image
+              src="/danfoai_logo.png"
+              alt="DanfoAI"
+              width={75}
+              height={55}
+              priority
+              className="logo"
+            />
           </div>
 
           <div className="chainbadge" title="Powered by 0G decentralized AI">
@@ -212,7 +223,10 @@ export default function Home() {
         <section className="chat" ref={scrollRef}>
           {messages.length === 0 && (
             <div className="empty">
-              <p className="emptylead">E kaabo. Where you dey go today?</p>
+              <p className="emptylead">
+                <FlipWords words={GREETINGS} duration={2500} /> Where you dey go
+                today?
+              </p>
               <div className="samples">
                 {SAMPLES.map((s) => (
                   <button key={s} className="sample" onClick={() => send(s)}>
@@ -439,6 +453,7 @@ export default function Home() {
         }
         .empty { margin: auto 0; text-align: center; }
         .emptylead {
+          position: relative;
           font-size: 18px;
           font-weight: 700;
           color: var(--text);
