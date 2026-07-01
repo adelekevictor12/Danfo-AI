@@ -185,8 +185,8 @@ export default function Home() {
             <Image
               src="/danfoai_logo.png"
               alt="DanfoAI"
-              width={75}
-              height={55}
+              width={160}
+              height={117}
               priority
               className="logo"
             />
@@ -417,6 +417,12 @@ export default function Home() {
         .brandtext {
           flex: 1;
           min-width: 0;
+          display: flex;
+          align-items: center;
+        }
+        .brandtext :global(.logo) {
+          width: 150px;
+          height: auto;
         }
         .brandtext h1 {
           margin: 0;
@@ -632,6 +638,7 @@ export default function Home() {
         /* ---- Mobile phones ---- */
         @media (max-width: 480px) {
           .top { padding: 11px 12px; gap: 8px; }
+          .brandtext :global(.logo) { width: 108px; }
           .brandtext h1 { font-size: 19px; }
           .brandtext p { display: none; }
           .chainbadge { display: none; }

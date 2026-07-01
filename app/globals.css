@@ -98,6 +98,15 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* The logo artwork (black wordmark + outlines) is drawn for a light backdrop.
+   On the dark header it would disappear, so sit it on a light chip in dark mode
+   to keep it legible while preserving its brand colours. */
+html[data-theme="dark"] .logo {
+  background: #fffdf5;
+  border-radius: 10px;
+  padding: 4px 8px;
+}
+
 /* Honour users who prefer less motion across the whole app. */
 @media (prefers-reduced-motion: reduce) {
   *,
