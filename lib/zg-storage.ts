@@ -12,23 +12,21 @@
  * NOTE: @0glabs/0g-ts-sdk is a Node SDK. These functions must run
  * server-side only (API routes / scripts), never in the browser.
  */
-import { ethers } from "ethers";
 import { ZgFile, Indexer } from "@0glabs/0g-ts-sdk";
 import { writeFile, unlink } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { randomUUID } from "crypto";
+import { getWallet } from "./zg-provider";
 
+// Still needed for indexer.upload(), which takes the RPC URL directly.
 const RPC_URL = process.env.RPC_URL || "https://evmrpc-testnet.0g.ai";
 const INDEXER_RPC =
   process.env.STORAGE_INDEXER ||
   "https://indexer-storage-testnet-turbo.0g.ai";
 
 function getSigner() {
-  const pk = process.env.PRIVATE_KEY;
-  if (!pk) throw new Error("PRIVATE_KEY missing from environment");
-  const provider = new ethers.JsonRpcProvider(RPC_URL);
-  return new ethers.Wallet(pk, provider);
+  return getWallet();
 }
 
 /**

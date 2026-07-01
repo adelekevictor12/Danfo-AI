@@ -11,21 +11,12 @@
  *  - Extract ChatID from the response (ZG-Res-Key header first, body fallback).
  *  - ethers v6 only.
  */
-import { ethers } from "ethers";
 import { createZGComputeNetworkBroker } from "@0glabs/0g-serving-broker";
-
-const RPC_URL = process.env.RPC_URL || "https://evmrpc-testnet.0g.ai";
+import { getWallet } from "./zg-provider";
 
 // Cache the broker across requests (init is expensive).
 let brokerPromise: ReturnType<typeof createZGComputeNetworkBroker> | null = null;
 let acknowledged = false;
-
-function getWallet() {
-  const pk = process.env.PRIVATE_KEY;
-  if (!pk) throw new Error("PRIVATE_KEY missing from environment");
-  const provider = new ethers.JsonRpcProvider(RPC_URL);
-  return new ethers.Wallet(pk, provider);
-}
 
 async function getBroker() {
   if (!brokerPromise) {
@@ -34,40 +25,90 @@ async function getBroker() {
   return brokerPromise;
 }
 
+// 0G Compute locks funds in a PER-PROVIDER sub-account, and the network
+// requires that sub-account to hold a minimum reserve (currently 1.0 0G) before
+// it accepts a request. Funds flow: wallet --deposit--> main account
+// --transferFund--> provider sub-account. We top the sub-account to a small
+// buffer above the minimum so request fees don't dip it back under.
+const MIN_BALANCE_OG = Number(process.env.COMPUTE_MIN_BALANCE_OG || 1.0);
+const TARGET_BALANCE_OG = Number(process.env.COMPUTE_TARGET_BALANCE_OG || 1.1);
+
+const ogToNeuron = (og: number) => BigInt(Math.round(og * 1e18)); // 1 0G = 1e18 neuron
+const neuronToOg = (n: bigint) => Number(n) / 1e18;
+
+// Providers we've already funded this process (avoid redundant on-chain txs).
+const fundedProviders = new Set<string>();
+
 /**
- * Ensure the compute account is funded and the provider is acknowledged.
- * Call once before the first inference. Funding amount is small for demo use.
+ * Make sure the provider's sub-account holds at least MIN_BALANCE_OG, creating
+ * the main ledger and moving funds through it as needed. Idempotent: once the
+ * sub-account meets the minimum this is a no-op (reads balance and returns).
+ */
+async function ensureProviderFunded(broker: any, provider: string) {
+  if (fundedProviders.has(provider.toLowerCase())) return;
+
+  const MIN = ogToNeuron(MIN_BALANCE_OG);
+  const TARGET = ogToNeuron(TARGET_BALANCE_OG);
+
+  let ledgerExists = false;
+  let available = 0n; // main-account funds free to transfer to sub-accounts
+  let subBalance = 0n; // this provider's locked balance
+  try {
+    const detail = await broker.ledger.getLedgerWithDetail();
+    ledgerExists = true;
+    // ledgerInfo = [total, locked, available]; infers = [provider, balance, ...][]
+    available = BigInt(detail.ledgerInfo?.[2] ?? 0);
+    const sub = (detail.infers ?? []).find(
+      (i: any[]) => String(i[0]).toLowerCase() === provider.toLowerCase()
+    );
+    if (sub) subBalance = BigInt(sub[1]);
+  } catch {
+    ledgerExists = false; // no ledger yet
+  }
+
+  if (subBalance >= MIN) {
+    fundedProviders.add(provider.toLowerCase());
+    return;
+  }
+
+  const subShortfall = TARGET - subBalance; // > 0 here
+
+  try {
+    // Create the main ledger (with an initial deposit) if it doesn't exist.
+    if (!ledgerExists) {
+      await broker.ledger.addLedger(TARGET_BALANCE_OG);
+      available = TARGET;
+    }
+    // Top up the main account if it can't cover the transfer yet.
+    if (available < subShortfall) {
+      const depositOg = neuronToOg(subShortfall - available) + 0.01; // small buffer
+      await broker.ledger.depositFund(depositOg);
+    }
+    // Lock the shortfall into the provider sub-account.
+    await broker.ledger.transferFund(provider, "inference", subShortfall);
+    fundedProviders.add(provider.toLowerCase());
+  } catch (e) {
+    throw new Error(
+      `Could not fund the 0G Compute sub-account for provider ${provider} to the ` +
+        `required ${MIN_BALANCE_OG} 0G (currently ~${neuronToOg(subBalance).toFixed(3)} 0G). ` +
+        `Make sure the wallet holds enough testnet 0G (get some from the 0G faucet), or ` +
+        `pre-fund manually: 0g-compute-cli deposit --amount 2 && 0g-compute-cli ` +
+        `transfer-fund --provider ${provider} --amount ${TARGET_BALANCE_OG}. ` +
+        `Underlying error: ${(e as Error).message}`
+    );
+  }
+}
+
+/**
+ * Ensure the provider sub-account is funded to the network minimum and the
+ * provider is acknowledged. Call once before the first inference.
  */
 export async function ensureComputeReady(providerAddress: string) {
   const broker = await getBroker();
 
-  // 1. Check the ledger. Create + fund it only if it doesn't exist or is low.
-  let needsFunding = true;
-  try {
-    const ledger = await broker.ledger.getLedger();
-    // ledger balance is a bigint in neuron (1e18). Fund if under ~0.05.
-    const balance = BigInt(ledger?.totalBalance ?? ledger?.balance ?? 0);
-    if (balance > 50_000_000_000_000_000n) needsFunding = false;
-  } catch {
-    // No ledger yet — must create it.
-    needsFunding = true;
-  }
+  await ensureProviderFunded(broker, providerAddress);
 
-  if (needsFunding) {
-    try {
-      // addLedger creates the account on first use; depositFund tops up an existing one.
-      await broker.ledger.addLedger(0.1);
-    } catch (e) {
-      // Already exists -> top up instead.
-      try {
-        await broker.ledger.depositFund(0.1);
-      } catch (e2) {
-        console.warn("funding failed:", (e2 as Error).message);
-      }
-    }
-  }
-
-  // 2. Acknowledge the provider (only needs to happen once per provider).
+  // Acknowledge the provider (only needs to happen once per provider).
   if (!acknowledged) {
     try {
       await broker.inference.acknowledgeProviderSigner(providerAddress);
