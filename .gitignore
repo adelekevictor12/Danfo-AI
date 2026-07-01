@@ -1,2 +1,27 @@
-.env
+# dependencies
 /node_modules
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# secrets — never commit private keys or env files
+.env
+.env*.local
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# python (YarnGPT service)
+__pycache__/
+*.pyc
+yarngpt-service/.venv/
+yarngpt-service/models/
+
+# misc
+.DS_Store
+*.log

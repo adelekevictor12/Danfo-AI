@@ -15,14 +15,18 @@
   "dependencies": {
     "@0glabs/0g-serving-broker": "^0.6.5",
     "@0glabs/0g-ts-sdk": "^0.3.3",
+    "@clerk/nextjs": "^6.12.0",
     "ethers": "^6.13.0",
     "framer-motion": "^12.42.2",
+    "leaflet": "^1.9.4",
     "next": "14.2.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-leaflet": "^4.2.1",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.21",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
