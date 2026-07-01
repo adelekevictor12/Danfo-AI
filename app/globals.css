@@ -19,6 +19,9 @@
   --text: #111111;
   --text-muted: #5b4a00;
 
+  /* Logo wordmark: black on the yellow header, yellow on the dark header. */
+  --logo-ink: #111111;
+
   /* Brand header */
   --header-bg: #ffd400;
   --header-text: #111111;
@@ -55,6 +58,8 @@ html[data-theme="dark"] {
 
   --text: #f4f1e6;
   --text-muted: #b8b09a;
+
+  --logo-ink: #ffd400;
 
   --header-bg: #1c1a12;
   --header-text: #ffd400;
@@ -96,15 +101,6 @@ body {
   /* Smooth, but only the things that should animate on theme change. */
   transition: background-color 0.2s ease, color 0.2s ease;
   -webkit-font-smoothing: antialiased;
-}
-
-/* The logo artwork (black wordmark + outlines) is drawn for a light backdrop.
-   On the dark header it would disappear, so sit it on a light chip in dark mode
-   to keep it legible while preserving its brand colours. */
-html[data-theme="dark"] .logo {
-  background: #fffdf5;
-  border-radius: 10px;
-  padding: 4px 8px;
 }
 
 /* Honour users who prefer less motion across the whole app. */

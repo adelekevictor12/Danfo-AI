@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { FlipWords } from "./flipword";
 import ThemeToggle from "../components/ThemeToggle";
@@ -182,14 +181,11 @@ export default function Home() {
           </button>
 
           <div className="brandtext">
-            <Image
-              src="/danfoai_logo.png"
-              alt="DanfoAI"
-              width={160}
-              height={117}
-              priority
-              className="logo"
-            />
+            <span className="busmark" role="img" aria-label="DanfoAI" />
+            <span className="wordmark">
+              <span className="wm">DanfoAI</span>
+              <span className="tagline">Your route, your language</span>
+            </span>
           </div>
 
           <div className="chainbadge" title="Powered by 0G decentralized AI">
@@ -419,10 +415,35 @@ export default function Home() {
           min-width: 0;
           display: flex;
           align-items: center;
+          gap: 10px;
         }
-        .brandtext :global(.logo) {
-          width: 150px;
-          height: auto;
+        /* The bus, cropped from the logo PNG (region x116-716, y212-596). */
+        .busmark {
+          flex-shrink: 0;
+          width: 93px;
+          height: 60px;
+          background-image: url("/danfoai_logo.png");
+          background-repeat: no-repeat;
+          background-size: 208px 122px;
+          background-position: -17px -32px;
+        }
+        .wordmark {
+          display: flex;
+          flex-direction: column;
+          line-height: 1.05;
+          min-width: 0;
+        }
+        .wm {
+          font-size: 26px;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          color: var(--logo-ink);
+        }
+        .tagline {
+          font-size: 10.5px;
+          color: var(--header-subtext);
+          margin-top: 3px;
+          white-space: nowrap;
         }
         .brandtext h1 {
           margin: 0;
@@ -638,7 +659,14 @@ export default function Home() {
         /* ---- Mobile phones ---- */
         @media (max-width: 480px) {
           .top { padding: 11px 12px; gap: 8px; }
-          .brandtext :global(.logo) { width: 108px; }
+          .busmark {
+            width: 65px;
+            height: 42px;
+            background-size: 146px 86px;
+            background-position: -12px -22px;
+          }
+          .wm { font-size: 19px; }
+          .tagline { display: none; }
           .brandtext h1 { font-size: 19px; }
           .brandtext p { display: none; }
           .chainbadge { display: none; }
