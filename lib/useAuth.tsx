@@ -97,27 +97,39 @@ function useLocalIdentity() {
     const eth = getEthereum();
     if (!eth) {
       setError(
-        "No Ethereum wallet found. Install MetaMask, or use another sign-in option."
+        "No crypto wallet detected. Install MetaMask (metamask.io) and refresh, " +
+          "or use another sign-in option."
       );
       return;
     }
     setConnecting(true);
     try {
-      const provider = new BrowserProvider(eth);
-      await provider.send("eth_requestAccounts", []);
-      const signer = await provider.getSigner();
-      const addr = await signer.getAddress();
-      const message = `Sign in to DanfoAI\n\nAddress: ${addr}\nIssued: ${new Date().toISOString()}`;
-      await signer.signMessage(message);
+      // Request accounts. Try EIP-1193 directly first (most reliable trigger of
+      // the wallet popup), falling back to ethers' provider.send.
+      let accounts: string[] = [];
+      if (typeof eth.request === "function") {
+        accounts = await eth.request({ method: "eth_requestAccounts" });
+      } else {
+        const provider = new BrowserProvider(eth);
+        accounts = await provider.send("eth_requestAccounts", []);
+      }
 
+      const addr = accounts?.[0];
+      if (!addr) {
+        setError("No wallet account was authorized.");
+        return;
+      }
+
+      // Client-only session (no backend to verify a signature against), so we
+      // connect on account authorization alone — no second signing popup.
       setAddress(addr);
       const s: LocalSession = { mode: "wallet", address: addr };
       setLocal(s);
       persist(s);
     } catch (e: any) {
       setError(
-        e?.code === 4001 || /reject/i.test(e?.message || "")
-          ? "Signature request was rejected."
+        e?.code === 4001 || /reject|denied/i.test(e?.message || "")
+          ? "Wallet connection was rejected."
           : e?.message || "Couldn't connect wallet."
       );
     } finally {

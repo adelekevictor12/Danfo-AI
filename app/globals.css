@@ -19,6 +19,9 @@
   --text: #111111;
   --text-muted: #5b4a00;
 
+  /* Logo wordmark: black on the yellow header, yellow on the dark header. */
+  --logo-ink: #111111;
+
   /* Brand header */
   --header-bg: #ffd400;
   --header-text: #111111;
@@ -55,6 +58,8 @@ html[data-theme="dark"] {
 
   --text: #f4f1e6;
   --text-muted: #b8b09a;
+
+  --logo-ink: #ffd400;
 
   --header-bg: #1c1a12;
   --header-text: #ffd400;
