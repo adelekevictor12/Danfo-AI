@@ -1,0 +1,110 @@
+/*
+ * Global styles & design tokens for DanfoAI.
+ *
+ * All colours are driven by CSS custom properties so the whole UI can switch
+ * between light and dark themes by flipping a single `data-theme` attribute on
+ * <html>. Components reference the tokens (var(--token)) rather than hard-coded
+ * hex values, which keeps the danfo-yellow identity consistent across themes.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg: #fffdf5;
+  --surface: #ffffff;
+  --surface-hover: #fff7cc;
+
+  /* Text */
+  --text: #111111;
+  --text-muted: #5b4a00;
+
+  /* Brand header */
+  --header-bg: #ffd400;
+  --header-text: #111111;
+  --header-subtext: #5b4a00;
+  --header-border: #111111;
+
+  /* Lines & accents */
+  --border: #111111;
+  --accent: #ffd400;
+  --accent-text: #111111;
+  --ring: rgba(255, 212, 0, 0.5);
+
+  /* Chat */
+  --user-bubble: #0050b3;
+  --user-bubble-text: #ffffff;
+
+  /* Badges & status */
+  --badge-bg: #111111;
+  --badge-text: #ffd400;
+  --verify-ok: #0a7a2f;
+  --verify-warn: #9a6b00;
+  --danger: #d92626;
+  --provenance: #7a6a30;
+
+  --typing-dot: #111111;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #14130d;
+  --surface: #1f1d16;
+  --surface-hover: #2a2820;
+
+  --text: #f4f1e6;
+  --text-muted: #b8b09a;
+
+  --header-bg: #1c1a12;
+  --header-text: #ffd400;
+  --header-subtext: #c9b87a;
+  --header-border: #3a3526;
+
+  --border: #4a463a;
+  --accent: #ffd400;
+  --accent-text: #111111;
+  --ring: rgba(255, 212, 0, 0.45);
+
+  --user-bubble: #2f6fe0;
+  --user-bubble-text: #ffffff;
+
+  --badge-bg: #000000;
+  --badge-text: #ffd400;
+  --verify-ok: #4ade80;
+  --verify-warn: #fbbf24;
+  --danger: #ef4444;
+  --provenance: #8a8268;
+
+  --typing-dot: #f4f1e6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Smooth, but only the things that should animate on theme change. */
+  transition: background-color 0.2s ease, color 0.2s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Honour users who prefer less motion across the whole app. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

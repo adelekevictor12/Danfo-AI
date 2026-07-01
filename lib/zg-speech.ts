@@ -3,18 +3,11 @@
  * Same broker pattern as chat, but hits the audio/transcriptions endpoint.
  * Whisper handles Yoruba, Igbo, Hausa (with varying quality).
  */
-import { ethers } from "ethers";
 import { createZGComputeNetworkBroker } from "@0glabs/0g-serving-broker";
-
-const RPC_URL = process.env.RPC_URL || "https://evmrpc-testnet.0g.ai";
+import { getWallet } from "./zg-provider";
 
 let brokerPromise: ReturnType<typeof createZGComputeNetworkBroker> | null = null;
 
-function getWallet() {
-  const pk = process.env.PRIVATE_KEY;
-  if (!pk) throw new Error("PRIVATE_KEY missing");
-  return new ethers.Wallet(pk, new ethers.JsonRpcProvider(RPC_URL));
-}
 async function getBroker() {
   if (!brokerPromise) brokerPromise = createZGComputeNetworkBroker(getWallet());
   return brokerPromise;
@@ -30,11 +23,22 @@ async function getSttProvider(): Promise<string> {
   const stt = services.find((s: any) =>
     /whisper|speech|transcri/i.test(s.model || "")
   );
-  if (!stt) throw new Error("No 0G speech-to-text provider found. Pin STT_PROVIDER_ADDRESS.");
+  if (!stt)
+    throw new Error(
+      "No 0G speech-to-text provider is currently online. Set INTRON_API_KEY to use " +
+        "Intron for voice input, or pin a known STT provider via STT_PROVIDER_ADDRESS."
+    );
   return stt.provider;
 }
 
-export async function transcribe(audio: Buffer, filename = "audio.webm"): Promise<string> {
+/** ISO-639-1 codes Whisper understands for the Nigerian languages we target. */
+const SUPPORTED_LANGUAGES = new Set(["yo", "ig", "ha", "en"]);
+
+export async function transcribe(
+  audio: Buffer,
+  filename = "audio.webm",
+  language?: string
+): Promise<string> {
   const broker = await getBroker();
   const provider = await getSttProvider();
 
@@ -44,9 +48,14 @@ export async function transcribe(audio: Buffer, filename = "audio.webm"): Promis
   const headers = await broker.inference.getRequestHeaders(provider, "audio-transcription");
 
   const form = new FormData();
-  form.append("file", new Blob([audio]), filename);
+  form.append("file", new Blob([new Uint8Array(audio)]), filename);
   form.append("model", model);
-  // Let Whisper auto-detect language (don't force "en").
+  // A language hint markedly improves accuracy for Yoruba/Igbo/Hausa. If the
+  // caller doesn't pass a recognised code (e.g. Pidgin), we let Whisper
+  // auto-detect rather than forcing "en".
+  if (language && SUPPORTED_LANGUAGES.has(language)) {
+    form.append("language", language);
+  }
 
   const res = await fetch(`${endpoint}/audio/transcriptions`, {
     method: "POST",

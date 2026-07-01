@@ -1,0 +1,17 @@
+# YarnGPT TTS service dependencies.
+# NOTE: install PyTorch matching your platform/CUDA first (see https://pytorch.org).
+# These are best-effort pins; the YarnGPT package is the source of truth for its
+# own transitive deps — see https://github.com/saheedniyi02/yarngpt
+
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+
+torch>=2.2
+torchaudio>=2.2
+transformers>=4.40
+
+# YarnGPT and its audio-tokenizer dependencies
+git+https://github.com/saheedniyi02/yarngpt.git
+outetts
+uroman

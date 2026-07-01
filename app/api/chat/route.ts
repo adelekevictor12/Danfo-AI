@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { danfoChat, discoverProvider } from "../../../lib/zg-compute";
 import { loadRouteKB } from "../../../lib/routes-kb";
 import { buildSystemPrompt } from "../../../lib/prompt";
+import { isTimeoutError } from "../../../lib/zg-provider";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// The 0G testnet RPC is slow; give the request room before the platform kills it.
+export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,6 +38,15 @@ export async function POST(req: NextRequest) {
     });
   } catch (e) {
     console.error("/api/chat error:", e);
+    if (isTimeoutError(e)) {
+      return NextResponse.json(
+        {
+          error:
+            "The 0G testnet is responding slowly right now — please try again in a moment.",
+        },
+        { status: 504 }
+      );
+    }
     return NextResponse.json(
       { error: (e as Error).message || "inference failed" },
       { status: 500 }

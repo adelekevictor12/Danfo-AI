@@ -5,8 +5,8 @@
  * contract deployed to 0G's EVM L1 (Galileo testnet). ethers v6 only.
  */
 import { ethers } from "ethers";
+import { getProvider, getWallet } from "./zg-provider";
 
-const RPC_URL = process.env.RPC_URL || "https://evmrpc-testnet.0g.ai";
 const CONTRACT_ADDRESS = process.env.CORRECTIONS_CONTRACT || "";
 
 // Minimal ABI matching RouteCorrections.sol.
@@ -18,14 +18,8 @@ export const CORRECTIONS_ABI = [
   "event CorrectionSubmitted(uint256 indexed id, address indexed contributor, string fromStop, string toStop)",
 ];
 
-function getProvider() {
-  return new ethers.JsonRpcProvider(RPC_URL);
-}
-
 function getSigner() {
-  const pk = process.env.PRIVATE_KEY;
-  if (!pk) throw new Error("PRIVATE_KEY missing from environment");
-  return new ethers.Wallet(pk, getProvider());
+  return getWallet();
 }
 
 function readContract() {
