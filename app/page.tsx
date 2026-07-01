@@ -1,12 +1,16 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
+import { FlipWords } from "./flipword";
 
 interface Msg {
   role: "user" | "assistant";
   content: string;
   verified?: boolean;
 }
+
+const GREETINGS = ["E kaabo.", "Nnọọ.", "Barka.", "Welcome."];
 
 const SAMPLES = [
   "Mo fẹ lọ si Oshodi lati CMS",
@@ -63,16 +67,8 @@ export default function Home() {
   
   return (
     <main className="wrap">
-      <header className="top">
-        <div className="brandmark" aria-hidden>
-          <span className="stripe" />
-          <span className="stripe" />
-          <span className="stripe" />
-        </div>
-        <div className="brandtext">
-          <h1>DanfoAI</h1>
-          <p>Type any Lagos route — danfo or BRT — in your own language.</p>
-        </div>
+      <header className="top flex items-center gap-4 !justify-between">
+        <Image src="/danfoai_logo.png" alt="0G logo" width={75} height={55} />
         <div className="chainbadge" title="Powered by 0G decentralized AI">
           on&nbsp;0G
         </div>
@@ -81,7 +77,10 @@ export default function Home() {
       <section className="chat" ref={scrollRef}>
         {messages.length === 0 && (
           <div className="empty">
-            <p className="emptylead">E kaabo. Where you dey go today?</p>
+            <p className="emptylead">
+              <FlipWords words={GREETINGS} duration={2500} className="text-[#111] font-bold" />
+              {" "}Where you dey go today?
+            </p>
             <div className="samples">
               {SAMPLES.map((s) => (
                 <button key={s} className="sample" onClick={() => send(s)}>

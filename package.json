@@ -13,12 +13,14 @@
     "fund": "tsx scripts/fund.ts"
   },
   "dependencies": {
-    "@0glabs/0g-ts-sdk": "^0.3.3",
     "@0glabs/0g-serving-broker": "^0.6.5",
+    "@0glabs/0g-ts-sdk": "^0.3.3",
     "ethers": "^6.13.0",
+    "framer-motion": "^12.42.2",
     "next": "14.2.5",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@types/node": "^20",
